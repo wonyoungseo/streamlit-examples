@@ -1,6 +1,4 @@
-# Streamlit Crash Course Tutorial
-
-Tutorial from [JCharisTech & J-Secur1ty Youtube Channel](https://youtu.be/_9WiB2PDO7k)
+# Streamlit introductory tutorial
  
  
 ## Basic commands to start streamlit

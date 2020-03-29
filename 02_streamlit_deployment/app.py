@@ -3,42 +3,43 @@ import pandas as pd
 from functools import reduce
 import plotly_express as px
 
-df_confirmed = pd.read_csv(
-    'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
-df_deaths = pd.read_csv(
-    'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv')
-df_recovered = pd.read_csv(
-    'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv')
-id_list = df_confirmed.columns.to_list()[:4]
-vars_list = df_confirmed.columns.to_list()[4:]
-confirmed_tidy = pd.melt(df_confirmed, id_vars=id_list, \
-                         value_vars=vars_list, var_name='Date', value_name='Confirmed')
-deaths_tidy = pd.melt(df_deaths, id_vars=id_list, \
-                      value_vars=vars_list, var_name='Date', value_name='Deaths')
-recovered_tidy = pd.melt(df_recovered, id_vars=id_list, \
-                         value_vars=vars_list, var_name='Date', value_name='recovered')
-confirmed_tidy.head()
 
-id_list = df_confirmed.columns.to_list()[:4]
-vars_list = df_confirmed.columns.to_list()[4:]
-confirmed_tidy = pd.melt(df_confirmed, id_vars=id_list, value_vars=vars_list, var_name='Date', value_name='Confirmed')
-deaths_tidy = pd.melt(df_deaths, id_vars=id_list, value_vars=vars_list, var_name='Date', value_name='Deaths')
-recovered_tidy = pd.melt(df_recovered, id_vars=id_list, value_vars=vars_list, var_name='Date', value_name='recovered')
-
-data_frames = [confirmed_tidy, deaths_tidy, recovered_tidy]
-df_corona = reduce(lambda left, right: pd.merge(left, right, on=id_list + ['Date'], how='outer'), data_frames)
-
-id_vars = df_corona.columns[:5]
-data_type = ['Confirmed', 'Deaths', 'recovered']
-df_corona = pd.melt(df_corona, id_vars=id_vars, value_vars=data_type, var_name='type', value_name='Count')
-df_corona['Date'] = pd.to_datetime(df_corona['Date'], format='%m/%d/%y', errors='raise')
-
-tsmap_corona = df_corona[df_corona['type'] == 'Confirmed']
-tsmap_corona['Date'] = tsmap_corona['Date'].astype(str)
-to_Category = pd.cut(tsmap_corona['Count'], [-1, 0, 105, 361, 760, 1350, 6280, 200000],
-                     labels=[0, 1, 8, 25, 40, 60, 100])
-tsmap_corona = tsmap_corona.assign(size=to_Category)
-tsmap_corona = tsmap_corona[~pd.isnull(tsmap_corona['size'])].reset_index(drop=True)
+@st.cache
+def load_data():
+    df_confirmed = pd.read_csv(
+        'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
+    df_deaths = pd.read_csv(
+        'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv')
+    df_recovered = pd.read_csv(
+        'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv')
+    id_list = df_confirmed.columns.to_list()[:4]
+    vars_list = df_confirmed.columns.to_list()[4:]
+    confirmed_tidy = pd.melt(df_confirmed, id_vars=id_list, value_vars=vars_list, var_name='Date',
+                             value_name='Confirmed')
+    deaths_tidy = pd.melt(df_deaths, id_vars=id_list, value_vars=vars_list, var_name='Date', value_name='Deaths')
+    recovered_tidy = pd.melt(df_recovered, id_vars=id_list, value_vars=vars_list, var_name='Date',
+                             value_name='recovered')
+    confirmed_tidy.head()
+    id_list = df_confirmed.columns.to_list()[:4]
+    vars_list = df_confirmed.columns.to_list()[4:]
+    confirmed_tidy = pd.melt(df_confirmed, id_vars=id_list, value_vars=vars_list, var_name='Date',
+                             value_name='Confirmed')
+    deaths_tidy = pd.melt(df_deaths, id_vars=id_list, value_vars=vars_list, var_name='Date', value_name='Deaths')
+    recovered_tidy = pd.melt(df_recovered, id_vars=id_list, value_vars=vars_list, var_name='Date',
+                             value_name='recovered')
+    data_frames = [confirmed_tidy, deaths_tidy, recovered_tidy]
+    df_corona = reduce(lambda left, right: pd.merge(left, right, on=id_list + ['Date'], how='outer'), data_frames)
+    id_vars = df_corona.columns[:5]
+    data_type = ['Confirmed', 'Deaths', 'recovered']
+    df_corona = pd.melt(df_corona, id_vars=id_vars, value_vars=data_type, var_name='type', value_name='Count')
+    df_corona['Date'] = pd.to_datetime(df_corona['Date'], format='%m/%d/%y', errors='raise')
+    tsmap_corona = df_corona[df_corona['type'] == 'Confirmed']
+    tsmap_corona['Date'] = tsmap_corona['Date'].astype(str)
+    to_Category = pd.cut(tsmap_corona['Count'], [-1, 0, 105, 361, 760, 1350, 6280, 200000],
+                         labels=[0, 1, 8, 25, 40, 60, 100])
+    tsmap_corona = tsmap_corona.assign(size=to_Category)
+    tsmap_corona = tsmap_corona[~pd.isnull(tsmap_corona['size'])].reset_index(drop=True)
+    return df_corona, tsmap_corona
 
 
 def write_main_page():
@@ -62,6 +63,7 @@ def write_main_page():
              )
 
 
+@st.cache
 def plot_confirmed(tsmap_corona):
     fig = px.scatter_geo(data_frame=tsmap_corona,
                          lat='Lat', lon='Long',
@@ -74,7 +76,7 @@ def plot_confirmed(tsmap_corona):
     return fig
 
 
-def create_layout():
+def create_layout(df_corona, tsmap_corona):
     st.sidebar.title("Menu")
     page = st.sidebar.selectbox("Please select a page",
                                 ["Main",
@@ -92,7 +94,8 @@ def create_layout():
 
 
 def main():
-    create_layout()
+    df_corona, tsmap_corona = load_data()
+    create_layout(df_corona, tsmap_corona)
 
 
 if __name__ == "__main__":

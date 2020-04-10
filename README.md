@@ -1,6 +1,6 @@
 # streamlit-examples
 
-This repository curates collection of practice cases and tutorials of streamlit. 
+- This repository curates collection of practice cases and tutorials of streamlit. 
 
 
 # Reference

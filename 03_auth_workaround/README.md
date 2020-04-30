@@ -1,1 +1,1 @@
-# Authentication Function Workaround in Streamlit
+# Demonstration of Authentication Function Workaround in Streamlit

@@ -1,6 +1,4 @@
 import streamlit as st
-from bokeh.models import Div
-
 
 def auth():
     user_id = st.sidebar.text_input('Input Username')

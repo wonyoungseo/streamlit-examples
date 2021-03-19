@@ -12,6 +12,8 @@
 
 **Requirements**
 
+python3.x
+
 - pandas 
 - streamlit 
 - xlsxwriter
